@@ -1,14 +1,14 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 import "../api"
 import "../router"
 import APIProxy 1.0
-import QtGraphicalEffects 1.0
-import QtQuick 2.11
-import QtQuick.Controls 2.4
-import QtQuick.Dialogs 1.0
-import QtQuick.Layouts 1.7
+import QtCore
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Dialogs
+import QtQuick.Layouts
 import org.deepin.dtk 1.0
 
 Item {
@@ -27,7 +27,8 @@ Item {
         if (imgListModel.count >= 3)
             return ;
 
-        const info = API.getFileInfo(src);
+        const filepath = src.toString();
+        const info = API.getFileInfo(filepath);
         if (info.size > 1024 * 1024) {
             API.notify(qsTr("Unable to add a screenshot."), qsTr("The image file size should be less than 1MB."));
             return ;
@@ -42,7 +43,7 @@ Item {
             API.notify(qsTr("Unable to add a screenshot."), qsTr("The image file format is not supported for uploading."));
             return ;
         }
-        api.uploadFile(src);
+        api.uploadFile(filepath);
     }
 
     APIProxy {
@@ -73,7 +74,6 @@ Item {
         property int controlWidth: width - 100 * 2
 
         icon: "deepin-home"
-        title: qsTr("Submit Feedback")
         width: root.width * 0.8
         height: submitLayout.height + 36 + 36
         onClosing: {
@@ -97,7 +97,7 @@ Item {
 
             Label {
                 Layout.alignment: Qt.AlignHCenter
-                text: win.title
+                text: qsTr("Submit Feedback")
                 Layout.bottomMargin: 5
                 font.pixelSize: DTK.fontManager.t6.pixelSize
                 font.bold: true
@@ -123,7 +123,7 @@ Item {
 
                         anchors.verticalCenter: parent.verticalCenter
                         checked: true
-                        width: 150 // 控件宽度没自适应
+                        width: Math.max(150, implicitWidth)
                         text: qsTr("Suggestions")
                         font.pixelSize: DTK.fontManager.t7.pixelSize
                     }
@@ -132,8 +132,8 @@ Item {
                         id: bugType
 
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 150 // 控件宽度没自适应
                         anchors.left: reqType.right
+                        width: Math.max(150, implicitWidth)
                         text: qsTr("Bug Report")
                         font.pixelSize: DTK.fontManager.t7.pixelSize
                     }
@@ -157,21 +157,22 @@ Item {
                     width: win.controlWidth
                     selectByMouse: true
                     text: ""
+                    placeholderText: qsTr("Please provide a brief description of your issue")
+                    HoverHandler { id: titleHover }
+                    TextMetrics {
+                        id: titlePlaceholderMetrics
+                        font: titleText.font
+                        text: titleText.placeholderText
+                    }
+                    ToolTip.visible: titleHover.hovered && !text
+                                     && titlePlaceholderMetrics.width > width - leftPadding - rightPadding
+                    ToolTip.text: placeholderText
+                    ToolTip.delay: 300
                     font.pixelSize: DTK.fontManager.t6.pixelSize
                     onTextChanged: {
                         if (length > 60)
                             remove(60, length);
 
-                    }
-
-                    Text {
-                        x: 10
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: qsTr("Please provide a brief description of your issue")
-                        font.pixelSize: DTK.fontManager.t6.pixelSize
-                        color: "#555"
-                        opacity: 0.4
-                        visible: !titleText.text && !titleText.activeFocus
                     }
 
                 }
@@ -217,6 +218,8 @@ Item {
                         font: DTK.fontManager.t9
                         color: Qt.rgba(0, 0, 0, 0.6)
                         text: bugType.checked ? qsTr("Do not fill in multiple issues in one feedback") : qsTr("Do not fill in multiple requirements in one feedback")
+                        width: win.controlWidth
+                        wrapMode: Text.Wrap
                     }
 
                 }
@@ -239,8 +242,8 @@ Item {
                     text: emailText.text
                     visible: false
 
-                    validator: RegExpValidator {
-                        regExp: /^[a-zA-Z0-9_\.-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
+                    validator: RegularExpressionValidator {
+                        regularExpression: /^[a-zA-Z0-9_\.-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
                     }
 
                 }
@@ -251,16 +254,17 @@ Item {
                     selectByMouse: true
                     width: win.controlWidth / 2
                     text: ""
-
-                    Text {
-                        x: 10
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: qsTr("Please enter your email")
-                        font.pixelSize: DTK.fontManager.t6.pixelSize
-                        color: "#555"
-                        opacity: 0.4
-                        visible: !emailText.text && !emailText.activeFocus
+                    placeholderText: qsTr("Please enter your email")
+                    HoverHandler { id: emailHover }
+                    TextMetrics {
+                        id: emailPlaceholderMetrics
+                        font: emailText.font
+                        text: emailText.placeholderText
                     }
+                    ToolTip.visible: emailHover.hovered && !text
+                                     && emailPlaceholderMetrics.width > width - leftPadding - rightPadding
+                    ToolTip.text: placeholderText
+                    ToolTip.delay: 300
 
                 }
 
@@ -309,7 +313,9 @@ Item {
 
                         text: qsTr("Upload <a href='home://sysinfo'>device information</a>")
                         linkColor: "blue"
-                        height: reqType.height
+                        width: win.controlWidth - sysinfoSwitch.width
+                        height: Math.max(reqType.height, implicitHeight)
+                        wrapMode: Text.Wrap
                         verticalAlignment: Text.AlignVCenter
                         onLinkActivated: {
                             sysinfoView.visible = true;
@@ -338,12 +344,12 @@ Item {
                         FileDialog {
                             id: fileDialog
 
-                            title: "Please choose a file"
-                            folder: shortcuts.home
-                            selectMultiple: true
+                            title: qsTr("Please choose a file")
+                            currentFolder: StandardPaths.standardLocations(StandardPaths.HomeLocation)[0]
+                            fileMode: FileDialog.OpenFiles
                             nameFilters: [qsTr("Image files") + " (*.png *.jpg *.gif)"]
                             onAccepted: {
-                                for (const f of fileDialog.fileUrls) {
+                                for (const f of fileDialog.selectedFiles) {
                                     root.appendImage(f);
                                 }
                             }
@@ -440,6 +446,8 @@ Item {
                         font: DTK.fontManager.t9
                         color: Qt.rgba(0, 0, 0, 0.6)
                         text: qsTr("Drag and drop files or click buttons to add pictures, up to three")
+                        width: win.controlWidth
+                        wrapMode: Text.Wrap
                     }
 
                 }
@@ -469,16 +477,30 @@ Item {
                             id: cancelText
 
                             Layout.alignment: Qt.AlignHCenter
+                            Layout.preferredWidth: cancelConfirm.width - 40
                             font.pixelSize: DTK.fontManager.t5.pixelSize
                             font.weight: Font.Medium
                             text: qsTr("Are you sure you want to exit the feedback submission?")
+                            elide: Text.ElideRight
+
+                            HoverHandler { id: cancelTextHover }
+                            ToolTip.visible: cancelTextHover.hovered && truncated
+                            ToolTip.text: text
+                            ToolTip.delay: 300
                         }
 
                         Text {
                             Layout.alignment: Qt.AlignHCenter
+                            Layout.preferredWidth: cancelConfirm.width - 40
                             font: DTK.fontManager.t8
                             color: Qt.rgba(0, 0, 0, 0.7)
                             text: qsTr("The feedback content will not be saved.")
+                            elide: Text.ElideRight
+
+                            HoverHandler { id: cancelDescriptionHover }
+                            ToolTip.visible: cancelDescriptionHover.hovered && truncated
+                            ToolTip.text: text
+                            ToolTip.delay: 300
                         }
 
                         RowLayout {
@@ -579,9 +601,9 @@ Item {
         // 拖拽文件处理
         DropArea {
             anchors.fill: parent
-            onEntered: {
+            onEntered: function(drag) {
                 dropRect.visible = true;
-                drag.accept(Qt.CopyAction);
+                drag.accepted = true;
             }
             onExited: {
                 dropRect.visible = false;
@@ -650,8 +672,13 @@ Item {
         component ControlLabel: Text {
             font.pixelSize: DTK.fontManager.t6.pixelSize
             width: 100
-            height: parent.height
             horizontalAlignment: Text.AlignRight
+            elide: Text.ElideRight
+
+            HoverHandler { id: labelHover }
+            ToolTip.visible: labelHover.hovered && truncated
+            ToolTip.text: text
+            ToolTip.delay: 300
         }
 
     }

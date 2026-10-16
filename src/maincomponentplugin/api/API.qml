@@ -1,11 +1,11 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 pragma Singleton
 
 import APIProxy 1.0
-import QtQuick 2.0
+import QtQuick
 
 Item {
     // 服务器节点
@@ -47,9 +47,6 @@ Item {
     }
     // 获取文件信息
     function getFileInfo(filepath) {
-        if(filepath.startsWith("file://")){
-            filepath=filepath.slice("file://".length)
-        }
         return worker.getFileInfo(filepath)
     }
     // 发送系统通知

@@ -1,18 +1,16 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-import QtQuick 2.11
-import QtQuick.Layouts 1.7
+import QtQuick
+import QtQuick.Layouts
 import org.deepin.dtk 1.0
-import org.deepin.dtk.style 1.0 as DS
 import "../api"
 import "../router"
 
 // 窗口图标和返回按钮
 TitleBar {
     id: root
-    height: DS.Style.titleBar.height
     icon.name: "deepin-home"
     signal notifyClicked()
     
