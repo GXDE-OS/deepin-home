@@ -1,3 +1,9 @@
+deepin-home (1.6.6-gxde2) unstable; urgency=medium
+
+  * 修复在海外语言设置为ZH_CN的系统没法正常使用深度之家的问题
+
+ -- CharofString <root@charofstring.cc>  Fri, 16 Oct 2026 13:13:02 +0800
+
 deepin-home (1.6.6) unstable; urgency=medium
 
   * Release 1.6.6
