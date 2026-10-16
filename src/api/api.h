@@ -47,7 +47,7 @@ public:
     explicit API(QNetworkDiskCache *cacheDisk, QObject *parent = nullptr);
     ~API();
 
-    DHHandlers_NodeSelectResponse getNode(QString server, QString machineID);
+    DHHandlers_NodeSelectResponse getNode(QString server, QString machineID, int timeout = 0);
     DHHandlers_LanguageCodeResponse getLanguage(QString server);
     DHHandlers_PublicTopicsResponse getTopics(QString server, QString channel);
     QList<DHHandlers_ClientMessagesResponse> getMessages(QString server,

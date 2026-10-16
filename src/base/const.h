@@ -7,6 +7,7 @@
 
 const char DEEPIN_HOME_SERVER[] = "https://home.deepin.org";
 const char DEEPIN_HOME_SERVER_CN[] = "https://home.deepin.org.cn";
+const int DEEPIN_HOME_SERVER_CN_TIMEOUT = 10 * 1000; // 国内服务器探测超时（毫秒），超时后改用国际服务器
 const char DEEPIN_HOME_DAEMON_SERVICE[] = "com.deepin.Home.Daemon";
 const char DEEPIN_HOME_DAEMON_PATH[] = "/com/deepin/Home/Daemon";
 const char DEEPIN_HOME_DAEMON_INTERFACE[] = "com.deepin.Home.Daemon";

@@ -113,23 +113,44 @@ QString HomeDaemon::getMachineID()
     return machineID;
 }
 
-// 获取服务器地址
-QString HomeDaemon::getServer()
+// 获取地区对应的服务器地址，优先使用配置文件中的地址
+QString HomeDaemon::getRegionServer(const QString &region)
 {
-    // 根据语言选择不同的服务器
-    const auto isCN = QLocale::system().name().contains("CN");
-    const QString region = isCN ? "CN" : "DE";
     auto server = m_settings.value("server_" + region).toString();
     if (!server.isEmpty()) {
         return server;
     }
-    if (isCN) {
+    if (region == "CN") {
         server = DEEPIN_HOME_SERVER_CN;
     } else {
         server = DEEPIN_HOME_SERVER;
     }
     m_settings.setValue("server_" + region, server);
     return server;
+}
+
+// 获取服务器地址
+QString HomeDaemon::getServer()
+{
+    if (!m_server.isEmpty()) {
+        return m_server;
+    }
+    // 根据语言选择不同的服务器
+    const auto isCN = QLocale::system().name().contains("CN");
+    auto server = getRegionServer(isCN ? "CN" : "DE");
+    // 国内服务器在超时时间内无法访问时，改用国际服务器
+    if (isCN) {
+        try {
+            m_api->getNode(server, getMachineID(), DEEPIN_HOME_SERVER_CN_TIMEOUT);
+        } catch (APIException exp) {
+            qCWarning(logger) << "CN server unreachable, fallback to DE server" << server
+                              << exp.err_code << exp.err_msg;
+            server = getRegionServer("DE");
+            m_serverFallback = true;
+        }
+    }
+    m_server = server;
+    return m_server;
 }
 
 // 获取当前语言
@@ -193,8 +214,9 @@ void HomeDaemon::start()
 {
     // 初始化 account 服务
     if (m_account == nullptr) {
-        QTimer::singleShot(1000, this, &HomeDaemon::run);
+        // getServer 可能阻塞探测国内服务器，先确定服务器再启动定时器，避免 run 重入探测
         m_account = new Account(this, m_api, getServer());
+        QTimer::singleShot(1000, this, &HomeDaemon::run);
         connect(m_account, &Account::userInfoChanged, this, &HomeDaemon::userInfoChanged);
     }
 }
@@ -232,6 +254,10 @@ void HomeDaemon::refreshNode()
     auto node = m_api->getNode(getServer(), getMachineID());
 
     m_node = node.getServer();
+    // 服务器按 Accept-Language 分配节点，zh-CN 仍会分到国内节点，回退后直接使用国际服务器
+    if (m_serverFallback) {
+        m_node = m_server;
+    }
     m_channels = node.getChannels();
     m_nodeRefreshTime = node.getRefreshTime();
 }

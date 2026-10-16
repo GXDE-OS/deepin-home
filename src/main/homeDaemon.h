@@ -34,6 +34,10 @@ class HomeDaemon : public QObject, protected QDBusContext
 private:
     // 语言环境
     QString m_language;
+    // 服务器地址（启动后首次获取时确定）
+    QString m_server;
+    // 国内服务器超时，已回退到国际服务器
+    bool m_serverFallback = false;
     // 分发节点
     QString m_node;
     // 消息渠道
@@ -64,6 +68,8 @@ private:
     void initSysTrayIcon();
     // 生成UUID
     QString newUUID();
+    // 获取地区对应的服务器地址，优先使用配置文件中的地址
+    QString getRegionServer(const QString &region);
     // 每个消息的状态存储在配置文件中
     QString messageSettingKey(QString channel, QString topic, QString uuid);
     // 主流程，更新node信息，并启动定时器刷新渠道消息

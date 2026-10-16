@@ -342,10 +342,11 @@ DHHandlers_LanguageCodeResponse API::getLanguage(QString server)
                                                        &DHClientApi::getLanguageCodeSignalEFull);
 }
 
-// 获取分发节点和消息渠道列表
-DHHandlers_NodeSelectResponse API::getNode(QString server, QString machineID)
+// 获取分发节点和消息渠道列表，timeout 单位毫秒，0 表示不超时
+DHHandlers_NodeSelectResponse API::getNode(QString server, QString machineID, int timeout)
 {
     auto client = getClient(server);
+    client->setTimeOut(timeout);
     client->getNodes(machineID);
     return waitSignal<DHHandlers_NodeSelectResponse>(client.data(),
                                                      &DHClientApi::getNodesSignalFull,
