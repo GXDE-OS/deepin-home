@@ -417,7 +417,7 @@ QStringList HomeDaemon::getToken(QString publicKey)
 #ifndef QT_DEBUG
     auto pid = connection().interface()->servicePid(message().service());
     qCDebug(logger) << "sender pid" << pid;
-    auto sender = QFile::symLinkTarget(QString("/proc/%1/exe").arg(pid));
+    auto sender = QFile::symLinkTarget(QString("/proc/%1/exe").arg(pid.value()));
     if (sender != QString("%1%2").arg(APP_BIN_INSTALL_DIR).arg(APP_NAME)) {
         qCDebug(logger) << "Not allow";
         // 加一个界面通知，避免代码贡献者不知道该接口检查调用者路径

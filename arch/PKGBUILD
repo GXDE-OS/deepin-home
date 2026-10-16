@@ -1,0 +1,38 @@
+# Maintainer: CharOfString <root@charofstring.cc>
+pkgname=deepin-home-git
+pkgver=1.6.6
+pkgrel=1
+pkgdesc='Deepin Home: quick login to the deepin forum and bug reporting'
+arch=('x86_64' 'aarch64')
+url="https://github.com/GXDE-OS/deepin-home"
+license=('LGPL-3.0-or-later')
+
+depends=('dtk6declarative-git' 'dtk6gui-git' 'dtk6core-git' 'qt6-base' 'qt6-declarative' 'qt6-5compat'
+         'openssl' 'inxi' 'libgcc' 'libstdc++' 'glibc')
+makedepends=('git' 'cmake' 'ninja' 'qt6-tools')
+provides=('deepin-home')
+conflicts=('deepin-home')
+source=()
+sha512sums=()
+
+_srcroot() {
+  git -C "$startdir" rev-parse --show-toplevel
+}
+
+build() {
+  cmake -B build -S "$(_srcroot)" -GNinja \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+    -DCMAKE_SKIP_INSTALL_RPATH=ON \
+    -DAPP_VERSION="$pkgver"
+  ninja -C build
+}
+
+package() {
+  DESTDIR="$pkgdir" ninja -C build install
+
+  rm -r "$pkgdir/usr/lib/libQtDeepinHomeAPI.a" "$pkgdir/usr/lib/cmake/QtDeepinHomeAPI"
+  rmdir "$pkgdir/usr/lib/cmake"
+}
